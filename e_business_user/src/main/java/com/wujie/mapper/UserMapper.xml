@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.wujie.mapper.UserMapper">
+  <select id="selectUserInfo" resultType="com.wujie.bean.T_MALL_USER_ACCOUNT">
+	select * from t_mall_user_account where yh_mch=#{yh_mch} and yh_mm=#{yh_mm}
+  </select>
+  <select id="selectAddressByUser" resultType="com.wujie.bean.T_MALL_ADDRESS">
+	select * from T_MALL_ADDRESS where yh_id=#{id}
+  </select>
+  <select id="selectAddressById" resultType="com.wujie.bean.T_MALL_ADDRESS">
+	select * from T_MALL_ADDRESS where id=#{id} 
+  </select>
+</mapper>

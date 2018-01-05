@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:beans="http://cxf.apache.org/configuration/beans"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mybatis-spring="http://mybatis.org/schema/mybatis-spring"
+	xmlns:jaxws="http://cxf.apache.org/jaxws"
+	xmlns:jaxrs="http://cxf.apache.org/jaxrs"
+	xsi:schemaLocation="http://cxf.apache.org/configuration/beans http://cxf.apache.org/schemas/configuration/cxf-beans.xsd
+		http://cxf.apache.org/jaxws http://cxf.apache.org/schemas/jaxws.xsd
+		http://mybatis.org/schema/mybatis-spring http://mybatis.org/schema/mybatis-spring-1.2.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd
+		http://cxf.apache.org/jaxrs http://cxf.apache.org/schemas/jaxrs.xsd">
+
+	<!-- 配置要扫描的包 -->
+	<context:component-scan base-package="com.wujie.service" use-default-filters="false">
+		<context:include-filter type="annotation" expression="org.springframework.stereotype.Service"/>
+	</context:component-scan>
+	
+	<!-- 配置数据源用来集成mybatis以及事务 -->
+	<context:property-placeholder location="classpath:db.properties"/>
+	<bean id="ds1" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+		<property name="user" value="${jdbc.username}"></property>
+		<property name="password" value="${jdbc.password}"></property>
+		<property name="jdbcUrl" value="${jdbc.url}"></property>
+		<property name="driverClass" value="${jdbc.driver}"></property>
+	</bean>
+	<bean id="ds2" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+		<property name="user" value="${jdbc.username}"></property>
+		<property name="password" value="${jdbc.password}"></property>
+		<property name="jdbcUrl" value="${jdbc.url2}"></property>
+		<property name="driverClass" value="${jdbc.driver}"></property>
+	</bean>
+
+	<bean id="dataSource" class="com.wujie.util.MyRoutingDataSource">
+		<property name="targetDataSources">
+			<map key-type="java.lang.String">
+				<entry key="ds1" value-ref="ds1"></entry>
+				<entry key="ds2" value-ref="ds2"></entry>
+			</map>
+		</property>
+		<property name="defaultTargetDataSource" ref="ds1"></property>
+	</bean>
+	
+	<!-- 配置事务 -->
+	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSource"></property>
+	</bean>
+	
+	<jaxws:endpoint address="/test" implementorClass="com.wujie.server.TestServerInf">
+		<jaxws:implementor>
+			<bean class="com.wujie.server.TestServer"></bean>
+		</jaxws:implementor>
+	</jaxws:endpoint>
+	
+	<jaxws:endpoint address="/user" implementorClass="com.wujie.server.UserServerInf">
+		<jaxws:implementor>
+			<bean class="com.wujie.server.UserServer"></bean>
+		</jaxws:implementor>
+	</jaxws:endpoint>
+	
+	<jaxrs:server address="/rest" >
+		<jaxrs:serviceBeans>
+			<bean class="com.wujie.server.TestServer"></bean>
+		</jaxrs:serviceBeans>
+	</jaxrs:server>
+	
+	<!-- 配置mybatis -->
+	<bean id="sqlSessionFactoryBean" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource"></property>
+		<property name="configLocation" value="classpath:mybatis-config.xml"></property>
+	</bean>
+	<bean id="mapperScannerConfigurer" class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+		<property name="basePackage" value="com.wujie.mapper"></property>
+		<property name="sqlSessionFactoryBeanName" value="sqlSessionFactoryBean"></property>
+	</bean>
+</beans>
